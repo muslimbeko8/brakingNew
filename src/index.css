@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.create-article:hover > span{
+  background: white;
+  color: black;
+  transition: .5s;
+  order: 2;
+}
+.create-article:hover{
+  padding: 2px 2px 2px 20px;
+}
+nav .active{
+  color: black;
+  border: 1px solid black;
+  background: white;
+}
