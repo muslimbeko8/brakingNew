@@ -1,28 +1,43 @@
 import axios from "axios";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
+const token = localStorage.getItem("token");
+
+export const authApi = createApi({
+  reducerPath: "authApi",
+  baseQuery: fetchBaseQuery({
+    baseUrl: "https://mustafocoder.pythonanywhere.com",
+    headers: token ? { Authorization: `Token ${token}` } : {},
+    credentials: "include",
+  }),
+  endpoints: (builder) => ({
+    loginApi: builder.mutation({
+      query: (data) => ({
+        url: "/auth/login/",
+        method: "POST",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+    signUpApi: builder.mutation({
+      query: (data) => ({
+        url: "/auth/signup/",
+        method: "POST",
+        body: data,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }),
+    }),
+  }),
+});
+//
 axios.interceptors.request.use((config) => {
   config.baseURL = "https://mustafocoder.pythonanywhere.com";
   return config;
 });
-
-export const loginAPI = async (body) => {
-  const res = await axios.post("/auth/login/", body, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  return res.data;
-};
-export const signupAPI = async (body) => {
-  const res = await axios.post("/auth/signup/", body, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-  return res.data;
-};
-
 export const getUserAPI = async (token) => {
   const res = await axios.get("/auth/user/", {
     headers: {
@@ -32,7 +47,6 @@ export const getUserAPI = async (token) => {
   });
   return res.data;
 };
-
 export const createArticleAPI = async (body, token) => {
   const res = await axios.post("/api/articles/create/", body, {
     headers: {
@@ -42,29 +56,7 @@ export const createArticleAPI = async (body, token) => {
   });
   return res.data;
 };
-// done
-export const deleteArticleAPI = async (id, token) => {
-  const res = await axios.delete(`/api/articles/${id}/delete/`, {
-    credentials: "include",
-    headers: {
-      Authorization: `Token ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-  return res.data;
-};
-// done
-export const updateArticleAPI = async (id, body, token) => {
-  const res = await axios.put(`/api/articles/${id}/update/`, body, {
-    headers: {
-      Authorization: `Token ${token}`,
-      "Content-Type": "multipart/form-data",
-    },
-  });
-  return res.data;
-};
-
-const token = localStorage.getItem("token");
+//
 export const articlesApi = createApi({
   reducerPath: "articleApi",
   baseQuery: fetchBaseQuery({
@@ -92,12 +84,34 @@ export const articlesApi = createApi({
         body: data.formData,
       }),
     }),
+    searchArticles: builder.query({
+      query: (query) => `api/articles/search/?query=${query}`,
+    }),
+    updateProfile: builder.mutation({
+      query: (data) => ({
+        url: "auth/update-profile/",
+        method: "PUT",
+        body: data,
+      }),
+    }),
+    createArticle: builder.mutation({
+      query: ({ body }) => ({
+        url: "/api/articles/create/",
+        method: "POST",
+        body,
+      }),
+    }),
   }),
 });
+
+export const { useLoginApiMutation, useSignUpApiMutation } = authApi;
 
 export const {
   useGetArticlesQuery,
   useGetSingleArticleQuery,
   useDeleteArticleMutation,
   useUpdateArticleMutation,
+  useSearchArticlesQuery,
+  useUpdateProfileMutation,
+  useCreateArticleMutation,
 } = articlesApi;

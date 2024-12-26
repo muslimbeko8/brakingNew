@@ -4,7 +4,6 @@ import useFetch from "../hooks/useFetch";
 import { useDispatch, useSelector } from "react-redux";
 import {
   articlesApi,
-  deleteArticleAPI,
   useDeleteArticleMutation,
   useGetSingleArticleQuery,
 } from "../service/api";

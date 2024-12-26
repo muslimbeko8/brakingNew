@@ -3,10 +3,11 @@ import { useParams } from 'react-router-dom'
 import useFetch from '../hooks/useFetch'
 import { Articles } from '.'
 import { CircularProgress } from '@mui/material'
+import { useSearchArticlesQuery } from '../service/api'
 
 const Search = () => {
   const { query } = useParams()
-  const { data, loading, error } = useFetch(`/api/articles/search/?query=${query}`)
+  const { data, loading, error } = useSearchArticlesQuery(query)
 
   return (
     <div>

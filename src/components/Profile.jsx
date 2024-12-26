@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
+import { useUpdateProfileMutation } from "../service/api";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -20,6 +21,7 @@ import {
 import { Person } from "@mui/icons-material";
 
 const Profile = () => {
+  const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [open, setOpen] = React.useState(false);
@@ -41,7 +43,7 @@ const Profile = () => {
     if (!user) {
       navigate("/");
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,46 +56,30 @@ const Profile = () => {
   };
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem("token");
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
       if (value) data.append(key, value);
     });
 
     try {
-      const response = await fetch(
-        "https://mustafocoder.pythonanywhere.com/auth/update-profile/",
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-          body: data,
-        }
-      );
-
-      if (response.ok) {
-        setSnackbar({
-          open: true,
-          message: "Profile updated successfully",
-          severity: "success",
-        });
-        setOpen(false);
-      } else {
-        const error = await response.json();
-        setSnackbar({
-          open: true,
-          message: error.message || "Failed to update profile",
-          severity: "error",
-        });
-      }
+      const result = await updateProfile(data).unwrap();
+      setSnackbar({
+        open: true,
+        message: "Profile updated successfully",
+        severity: "success",
+      });
+      setOpen(false);
     } catch (error) {
       setSnackbar({
         open: true,
-        message: error.message,
+        message: error.data?.message || "Failed to update profile",
         severity: "error",
       });
     }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   return (
@@ -152,13 +138,14 @@ const Profile = () => {
               variant="contained"
               color="primary"
               onClick={() => setOpen(true)}
+              disabled={isLoading}
             >
               Update Profile
             </Button>
 
             <Dialog
               open={open}
-              onClose={() => setOpen(false)}
+              onClose={() => !isLoading && setOpen(false)}
               maxWidth="sm"
               fullWidth
             >
@@ -171,6 +158,7 @@ const Profile = () => {
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
+                    disabled={isLoading}
                     margin="normal"
                   />
 
@@ -185,16 +173,19 @@ const Profile = () => {
                       value="female"
                       control={<Radio />}
                       label="Female"
+                      disabled={isLoading}
                     />
                     <FormControlLabel
                       value="male"
                       control={<Radio />}
                       label="Male"
+                      disabled={isLoading}
                     />
                     <FormControlLabel
                       value="other"
                       control={<Radio />}
                       label="Other"
+                      disabled={isLoading}
                     />
                   </RadioGroup>
 
@@ -205,6 +196,7 @@ const Profile = () => {
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
+                    disabled={isLoading}
                     margin="normal"
                   />
 
@@ -214,6 +206,7 @@ const Profile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
+                    disabled={isLoading}
                     margin="normal"
                   />
 
@@ -224,20 +217,38 @@ const Profile = () => {
                     type="number"
                     value={formData.age}
                     onChange={handleChange}
+                    disabled={isLoading}
                     margin="normal"
                   />
 
-                  <Button variant="contained" component="label">
+                  <Button
+                    variant="contained"
+                    component="label"
+                    disabled={isLoading}
+                  >
                     Upload Profile Picture
-                    <input type="file" hidden onChange={handleFileChange} />
+                    <input
+                      type="file"
+                      hidden
+                      onChange={handleFileChange}
+                      accept="image/*"
+                    />
                   </Button>
 
                   <div className="flex justify-end space-x-4 mt-4">
-                    <Button variant="outlined" onClick={() => setOpen(false)}>
+                    <Button
+                      variant="outlined"
+                      onClick={() => setOpen(false)}
+                      disabled={isLoading}
+                    >
                       Cancel
                     </Button>
-                    <Button variant="contained" onClick={handleSubmit}>
-                      Update
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmit}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Updating..." : "Update"}
                     </Button>
                   </div>
                 </div>
@@ -247,10 +258,10 @@ const Profile = () => {
             <Snackbar
               open={snackbar.open}
               autoHideDuration={6000}
-              onClose={() => setSnackbar({ ...snackbar, open: false })}
+              onClose={handleSnackbarClose}
             >
               <Alert
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                onClose={handleSnackbarClose}
                 severity={snackbar.severity}
                 sx={{ width: "100%" }}
               >
